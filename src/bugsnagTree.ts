@@ -31,7 +31,17 @@ export class BugsnagNodeProvider implements vscode.TreeDataProvider<Bug | BugChi
 
 	public getChildren(element?: Bug | BugChild): Thenable<vscode.TreeItem[]> {
 		if (element instanceof Bug) {
-			return Promise.resolve([new BugChild(element)]);
+			if (element.bugsnagBug.grouping_fields !== undefined && element.bugsnagBug.grouping_fields.file !== undefined) {
+				return new Promise((resolve, reject) => {
+					vscode.workspace.findFiles(element.bugsnagBug.grouping_fields.file, null, 1).then((uri) => {
+						if (uri.length === 1) {
+							resolve([new BugChild(element.bugsnagBug.message, uri)])
+						}
+					})
+				})
+			} else {
+				return Promise.resolve([new BugChild(element.bugsnagBug.message)])
+			}
 		} else if (this.authorizationToken === undefined) {
 			vscode.window.showInformationMessage("Please set authorization token")
 			return Promise.resolve([]);
@@ -71,9 +81,6 @@ export class BugsnagNodeProvider implements vscode.TreeDataProvider<Bug | BugChi
 }
 
 export class Bug extends vscode.TreeItem {
-	public readonly message: string;
-	public readonly uri?: vscode.Uri;
-
 	get tooltip(): string {
 		return `${this.label}`;
 	}
@@ -85,14 +92,21 @@ export class Bug extends vscode.TreeItem {
 
 	public contextValue = 'dependency';
 
-	constructor(bugsnagBug: BugsnagBug) {
+	constructor(public readonly bugsnagBug: BugsnagBug) {
 		super(`${bugsnagBug.error_class}: ${bugsnagBug.context}`, vscode.TreeItemCollapsibleState.Collapsed);
-		this.message = bugsnagBug.message;
 	}
 }
 
+
 class BugChild extends vscode.TreeItem {
-	constructor(bug: Bug) {
-		super(bug.message, vscode.TreeItemCollapsibleState.None)
+	constructor(message: string, uri?: vscode.Uri[]) {
+		super(message, vscode.TreeItemCollapsibleState.None)
+		if (uri !== undefined) {
+			this.command = {
+				command: "vscode.open",
+				title: "",
+				arguments: uri
+			}
+		}
 	}
 }
