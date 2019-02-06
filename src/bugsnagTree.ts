@@ -31,17 +31,21 @@ export class BugsnagNodeProvider implements vscode.TreeDataProvider<Bug | BugChi
 
 	public getChildren(element?: Bug | BugChild): Thenable<vscode.TreeItem[]> {
 		if (element instanceof Bug) {
-			if (element.bugsnagBug.grouping_fields !== undefined && element.bugsnagBug.grouping_fields.file !== undefined) {
-				return new Promise((resolve, reject) => {
-					vscode.workspace.findFiles(element.bugsnagBug.grouping_fields.file, null, 1).then((uri) => {
-						if (uri.length === 1) {
-							resolve([new BugChild(element.bugsnagBug.message, uri)])
-						}
+			if (element.bugsnagBug.grouping_fields !== undefined) {
+				const { file, lineNumber } = element.bugsnagBug.grouping_fields;
+				if (file !== null && lineNumber !== null) {
+					return new Promise((resolve, reject) => {
+						vscode.workspace.findFiles(element.bugsnagBug.grouping_fields.file, null, 1).then((uri) => {
+							if (uri.length === 1) {
+								resolve([new BugChild(element.bugsnagBug.message, uri[0], lineNumber)])
+							} else {
+								resolve([new BugChild(element.bugsnagBug.message)])
+							}
+						})
 					})
-				})
-			} else {
-				return Promise.resolve([new BugChild(element.bugsnagBug.message)])
+				}
 			}
+			return Promise.resolve([new BugChild(element.bugsnagBug.message)])
 		} else if (this.authorizationToken === undefined) {
 			vscode.window.showInformationMessage("Please set authorization token")
 			return Promise.resolve([]);
@@ -99,13 +103,13 @@ export class Bug extends vscode.TreeItem {
 
 
 class BugChild extends vscode.TreeItem {
-	constructor(message: string, uri?: vscode.Uri[]) {
+	constructor(message: string, uri?: vscode.Uri, lineNumber?: number) {
 		super(message, vscode.TreeItemCollapsibleState.None)
-		if (uri !== undefined) {
+		if (uri !== undefined && lineNumber !== undefined) {
 			this.command = {
-				command: "vscode.open",
+				command: "bugsnagBugs.gotoLine",
 				title: "",
-				arguments: uri
+				arguments: [uri, lineNumber]
 			}
 		}
 	}
