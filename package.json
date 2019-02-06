@@ -1,0 +1,82 @@
+{
+	"name": "vscode-bugsnag",
+	"displayName": "Bugsnag",
+	"description": "Integrate bugsnag with vscode",
+	"version": "0.0.1",
+	"publisher": "Plated",
+	"engines": {
+		"vscode": "^1.25.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:bugsnagBugs"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "bugsnag-explorer",
+					"title": "Bugsnag Explorer",
+					"icon": "media/dep.svg"
+				}
+			]
+		},
+		"views": {
+			"bugsnag-explorer": [
+				{
+					"id": "bugsnagBugs",
+					"name": "Bugsnag Bugs"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "bugsnagBugs.refreshEntry",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "bugsnagBugs.refreshEntry",
+					"when": "view == bugsnagBugs",
+					"group": "navigation"
+				}
+			]
+		},
+		"configuration": [
+			{
+				"title": "Bugsnag API Key",
+				"properties": {
+					"bugsnag.authorizationToken": {
+						"type": "string"
+					},
+					"bugsnag.projectId": {
+						"type": "string"
+					}
+				}
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"devDependencies": {
+		"@types/node": "*",
+		"tslint": "^5.11.0",
+		"tslint-config-prettier": "^1.18.0",
+		"typescript": "^3.3.1",
+		"vscode": "^1.1.22"
+	},
+	"dependencies": {}
+}
